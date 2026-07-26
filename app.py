@@ -137,14 +137,15 @@ st.markdown("""
     .custom-table td {
         padding: 6px;
         text-align: center;
-        border: 1px solid #e0e0e0;
+        border: 1px solid rgba(128, 128, 128, 0.3);
         white-space: nowrap;
+        color: inherit; 
     }
     .custom-table tr:nth-child(even) {
-        background-color: #f5f5f5;
+        background-color: rgba(128, 128, 128, 0.15);
     }
     .custom-table tr:hover {
-        background-color: #e3f2fd;
+        background-color: rgba(30, 136, 229, 0.2);
     }
     .check-yes {
         font-size: 1.4rem;
