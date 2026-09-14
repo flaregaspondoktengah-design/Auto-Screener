@@ -774,7 +774,6 @@ def main():
         **Main Criteria :**
         - Low hari ini < Low kemarin (Membuat lower low / sisa downtrend).
         - Close hari ini berada di setengah atas bar (Upper half = menolak harga turun).
-        - Awesome Oscillator (AO) < 0 (Momentum indikator masih bearish).
         
         **Exit Strategy :**
         - **Buy Price**: High hari ini + 1 tick.
@@ -782,7 +781,6 @@ def main():
         
         **Columns:**
         - **Low Today / Low Yesterday**: Perbandingan harga terendah untuk melihat lower low.
-        - **AO**: Awesome Oscillator (SMA 5 - SMA 34 dari Median Price).
         - **Buy Price**: Harga entry (High hari ini + 1 tick).
         - **SL Price**: Harga Stop Loss (Low hari ini - 1 tick).
         """)
