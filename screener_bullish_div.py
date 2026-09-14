@@ -68,6 +68,16 @@ def run_bullish_divergence_screener(df, ticker_item, target_date=None):
     prev = df_copy.iloc[-2]
     current_price = float(latest['Close'])
 
+    # Hitung Awesome Oscillator (AO)
+    df_copy['Median'] = (df_copy['High'] + df_copy['Low']) / 2.0
+    df_copy['SMA5'] = df_copy['Median'].rolling(5).mean()
+    df_copy['SMA34'] = df_copy['Median'].rolling(34).mean()
+    df_copy['AO'] = df_copy['SMA5'] - df_copy['SMA34']
+    
+    ao_val = float(latest['AO'])
+    if pd.isna(ao_val):
+        return None
+
     low_today = float(latest['Low'])
     low_yesterday = float(prev['Low'])
     high_today = float(latest['High'])
@@ -79,6 +89,10 @@ def run_bullish_divergence_screener(df, ticker_item, target_date=None):
         
     # KRITERIA 2: Close hari ini harus berada di setengah atas bar (Upper Half)
     if not (close_today >= ((high_today + low_today) / 2.0)):
+        return None
+
+    # KRITERIA 3: Awesome Oscillator (AO) < 0
+    if not (ao_val < 0):
         return None
 
     # Hitung Harga Buy dan Stop Loss berdasarkan bar hari ini
@@ -95,6 +109,7 @@ def run_bullish_divergence_screener(df, ticker_item, target_date=None):
         'Price': f"{apply_fraksi_harga(current_price):,.0f}",
         'Low Today': f"{apply_fraksi_harga(low_today):,.0f}",
         'Low Yesterday': f"{apply_fraksi_harga(low_yesterday):,.0f}",
+        'AO': f"{ao_val:,.2f}",
         'Buy Price': f"{apply_fraksi_harga(buy_price):,.0f}",
         'SL Price': f"{apply_fraksi_harga(sl_price):,.0f}",
         '%C vs PC': f"{pct_change_vs_pc:+.2f}%"
