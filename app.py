@@ -1,33 +1,12 @@
 # BSJP : Stock Screener Streamlit Application
-# Aplikasi untuk screening saham Indonesia dengan berbagai jenis screener:
-# 1. Magic Screener V1.1 - Live screening
-# 2. Backtest Magic Screener V1.1 - Historical analysis
-# 3. Magic Screener V1.3 - Live screening (3 days consecutive green)
-# 4. Backtest Magic Screener V1.3 - Historical analysis
-# 5. BB Reversal - Live screening (Bollinger Band reversal)
-# 6. Backtest BB Reversal - Historical analysis
-# 7. IV Rank - Live screening (Implied Volatility Rank)
-# 8. Backtest IV Rank - Historical analysis
-# 9. Bullish Harami - Live screening (Candlestick pattern)
-# 10. Backtest Bullish Harami - Historical analysis
-# 11. 1 Day Reversal - Live screening (Red to Green reversal)
-# 12. Backtest 1 Day Reversal - Historical analysis
-# 13. Decreasing Highs - Live screening (4 days decreasing highs)
-# 14. Backtest Decreasing Highs - Historical analysis
-# 15. Sideways Screener - Live screening (MA Cluster detection)
-# 16. Backtest Sideways Screener - Historical analysis
-# 17. FVG Screener - Live screening (Fair Value Gap detection)
-# 18. Backtest FVG Screener - Historical analysis
-# 19. Oversold Screener - RSI & Stochastic oversold detection
-# 20. Backtest Oversold Screener - Historical analysis
-# 21. Demand Zone Screener - Stocks in demand zone area
-# 22. Volume Profile Screener - Stocks below VAL (Lookback 20)
+# Aplikasi untuk screening saham Indonesia dengan berbagai jenis screener
 
 import streamlit as st
 import pandas as pd
 from datetime import date, timedelta, datetime
 
 # Import screener modules
+from screener_bullish_div import run_bullish_divergence_screener, tickers as tickers_bd
 from screener_v11 import run_magic_screener, tickers as tickers_v11
 from backtest_screener_v11 import run_backtest_for_ticker, get_ticker_list as get_ticker_list_v11
 from screener_v13 import run_magic_screener_v13, tickers as tickers_v13
@@ -101,14 +80,12 @@ st.markdown("""
         margin-bottom: 1.5rem;
         border: 1px solid #e0e0e0;
     }
-    /* Gray color for Buy Criteria expander */
     .streamlit-expanderHeader {
         color: #757575 !important;
     }
     div[data-testid="stExpander"] summary p {
         color: #757575 !important;
     }
-    /* Custom checkbox styling for dataframe */
     .checkbox-checked {
         font-size: 1.5rem;
         color: #28a745;
@@ -119,7 +96,6 @@ st.markdown("""
         color: #dc3545;
         font-weight: bold;
     }
-    /* Style for custom HTML table */
     .custom-table {
         width: 100%;
         border-collapse: collapse;
@@ -186,7 +162,6 @@ st.markdown("""
         padding: 2px 6px;
         border-radius: 4px;
     }
-    /* Color cells following signal pattern - badge style */
     .cell-green {
         background-color: #28a745;
         color: white;
@@ -219,126 +194,92 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Session State Initialization ---
-# Magic Screener V1.1
+if 'bd_results' not in st.session_state:
+    st.session_state.bd_results = None
+
 if 'v11_results' not in st.session_state:
     st.session_state.v11_results = None
-
-# Backtest V1.1
 if 'v11_bt_results' not in st.session_state:
     st.session_state.v11_bt_results = None
 if 'v11_bt_summary' not in st.session_state:
     st.session_state.v11_bt_summary = None
 
-# Magic Screener V1.3
 if 'v13_results' not in st.session_state:
     st.session_state.v13_results = None
-
-# Backtest V1.3
 if 'v13_bt_results' not in st.session_state:
     st.session_state.v13_bt_results = None
 if 'v13_bt_summary' not in st.session_state:
     st.session_state.v13_bt_summary = None
 
-# BB Reversal
 if 'bb_results' not in st.session_state:
     st.session_state.bb_results = None
-
-# Backtest BB Reversal
 if 'bb_bt_results' not in st.session_state:
     st.session_state.bb_bt_results = None
 if 'bb_bt_summary' not in st.session_state:
     st.session_state.bb_bt_summary = None
 
-# IV Rank
 if 'iv_results' not in st.session_state:
     st.session_state.iv_results = None
-
-# Backtest IV Rank
 if 'iv_bt_results' not in st.session_state:
     st.session_state.iv_bt_results = None
 if 'iv_bt_summary' not in st.session_state:
     st.session_state.iv_bt_summary = None
 
-# Bullish Harami
 if 'bh_results' not in st.session_state:
     st.session_state.bh_results = None
-
-# Backtest Bullish Harami
 if 'bh_bt_results' not in st.session_state:
     st.session_state.bh_bt_results = None
 if 'bh_bt_summary' not in st.session_state:
     st.session_state.bh_bt_summary = None
 
-# 1 Day Reversal
 if 'dr_results' not in st.session_state:
     st.session_state.dr_results = None
-
-# Backtest 1 Day Reversal
 if 'dr_bt_results' not in st.session_state:
     st.session_state.dr_bt_results = None
 if 'dr_bt_summary' not in st.session_state:
     st.session_state.dr_bt_summary = None
 
-# Decreasing Highs
 if 'dh_results' not in st.session_state:
     st.session_state.dh_results = None
-
-# Backtest Decreasing Highs
 if 'dh_bt_results' not in st.session_state:
     st.session_state.dh_bt_results = None
 if 'dh_bt_summary' not in st.session_state:
     st.session_state.dh_bt_summary = None
 
-# Sideways Screener
 if 'dz_results' not in st.session_state:
     st.session_state.dz_results = None
-
-# Backtest Sideways Screener
 if 'dz_bt_results' not in st.session_state:
     st.session_state.dz_bt_results = None
 if 'dz_bt_summary' not in st.session_state:
     st.session_state.dz_bt_summary = None
 
-# FVG Screener
 if 'fvg_results' not in st.session_state:
     st.session_state.fvg_results = None
-
-# Backtest FVG Screener
 if 'fvg_bt_results' not in st.session_state:
     st.session_state.fvg_bt_results = None
 if 'fvg_bt_summary' not in st.session_state:
     st.session_state.fvg_bt_summary = None
 
-# Oversold Screener
 if 'os_results' not in st.session_state:
     st.session_state.os_results = None
-
-# Backtest Oversold Screener
 if 'os_bt_results' not in st.session_state:
     st.session_state.os_bt_results = None
 if 'os_bt_summary' not in st.session_state:
     st.session_state.os_bt_summary = None
 
-# Demand Zone Screener
 if 'dmz_results' not in st.session_state:
     st.session_state.dmz_results = None
-
-# Demand/Supply Lookup
 if 'dmz_lookup' not in st.session_state:
     st.session_state.dmz_lookup = None
 
-# Volume Trend Screener
 if 'vt_results' not in st.session_state:
     st.session_state.vt_results = None
 
-# Volume Profile Screener
 if 'vp_results' not in st.session_state:
     st.session_state.vp_results = None
 
-
 # --- Helper Functions ---
 def scroll_to_section(section_id):
-    """JavaScript to scroll to a specific section."""
     js_code = f'''
     <script>
         var section = document.getElementById("{section_id}");
@@ -350,7 +291,7 @@ def scroll_to_section(section_id):
     st.components.v1.html(js_code, height=0)
 
 def clear_all():
-    """Clear all results"""
+    st.session_state.bd_results = None
     st.session_state.v11_results = None
     st.session_state.v11_bt_results = None
     st.session_state.v11_bt_summary = None
@@ -386,31 +327,16 @@ def clear_all():
     st.session_state.vt_results = None
     st.session_state.vp_results = None
 
-
 def get_dates_in_range(date_input):
-    """
-    Mengembalikan list tanggal dari date_input.
-    Jika single date, kembalikan list dengan 1 tanggal.
-    Jika date range (tuple), kembalikan semua tanggal dalam range.
-    
-    Args:
-        date_input: date object atau tuple (start_date, end_date) atau tuple dengan 1 elemen
-    
-    Returns:
-        list of date objects
-    """
     if isinstance(date_input, tuple):
-        # Handle tuple dengan panjang berbeda
         if len(date_input) == 0:
             return [date.today()]
         elif len(date_input) == 1:
-            # Single date dalam tuple
             single_date = date_input[0]
             if single_date is None:
                 return [date.today()]
             return [single_date]
         else:
-            # Tuple dengan 2 elemen (start_date, end_date)
             start_date, end_date = date_input
             if start_date is None:
                 return [date.today()]
@@ -423,14 +349,11 @@ def get_dates_in_range(date_input):
                 current += timedelta(days=1)
             return dates
     else:
-        # Single date object
         if date_input is None:
             return [date.today()]
         return [date_input]
 
-
 def format_signal(signal):
-    """Format signal with appropriate CSS class."""
     signal_classes = {
         'STRONG BUY': 'signal-strong-buy',
         'BUY': 'signal-buy',
@@ -441,246 +364,111 @@ def format_signal(signal):
     cls = signal_classes.get(signal, '')
     return f'<span class="{cls}">{signal}</span>'
 
-
 def get_color_class_for_percentage(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai persentase.
-    Mengikuti pola signal: STRONG BUY/BUY (>=80) = hijau, CONSIDER (60-79.99) = kuning, WEAK (50-59.99) = orange, AVOID (<50) = merah
-    """
     try:
         value = float(str(value_str).replace('%', '').replace('x', '').strip())
-        if value >= 80:
-            return 'cell-green'       # STRONG BUY / BUY
-        elif value >= 60:
-            return 'cell-yellow'       # CONSIDER
-        elif value >= 50:
-            return 'cell-orange'       # WEAK
-        else:
-            return 'cell-red'          # AVOID
-    except:
-        return ''
-
+        if value >= 80: return 'cell-green'
+        elif value >= 60: return 'cell-yellow'
+        elif value >= 50: return 'cell-orange'
+        else: return 'cell-red'
+    except: return ''
 
 def get_color_class_for_ratio(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai rasio.
-    Mengikuti pola signal: STRONG BUY/BUY (>2x) = hijau, CONSIDER (1.5-2x) = kuning, WEAK (1-1.49x) = orange, AVOID (<1x) = merah
-    """
     try:
         value = float(str(value_str).replace('x', '').replace('X', '').strip())
-        if value > 2:
-            return 'cell-green'        # STRONG BUY / BUY
-        elif value >= 1.5:
-            return 'cell-yellow'       # CONSIDER
-        elif value >= 1:
-            return 'cell-orange'       # WEAK
-        else:
-            return 'cell-red'          # AVOID
-    except:
-        return ''
-
+        if value > 2: return 'cell-green'
+        elif value >= 1.5: return 'cell-yellow'
+        elif value >= 1: return 'cell-orange'
+        else: return 'cell-red'
+    except: return ''
 
 def get_color_class_for_rrr(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai RRR (Risk-Reward Ratio).
-    Kriteria:
-    - >=2.0x: Green (target jauh, risk kecil)
-    - >1.5x-1.9x: Yellow
-    - >=1.0x-1.5x: Orange
-    - <1.0x: Red (risk lebih besar dari reward)
-    """
     try:
         value = float(str(value_str).replace('x', '').replace('X', '').strip())
-        if value >= 2:
-            return 'cell-green'
-        elif value > 1.5:
-            return 'cell-yellow'
-        elif value >= 1:
-            return 'cell-orange'
-        else:
-            return 'cell-red'
-    except:
-        return ''
-
+        if value >= 2: return 'cell-green'
+        elif value > 1.5: return 'cell-yellow'
+        elif value >= 1: return 'cell-orange'
+        else: return 'cell-red'
+    except: return ''
 
 def get_color_class_for_compression_ratio(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai Compression Ratio (ATR 5 / ATR 20).
-    Semakin rendah = semakin bagus (volatilitas menurun, potensi breakout).
-    Kriteria:
-    - <= 0.8: Green (strong compression)
-    - 0.81 - 1.0: Yellow
-    - 1.01 - 1.2: Orange
-    - > 1.2: Red (no compression)
-    """
     try:
         value = float(str(value_str).replace('x', '').replace('X', '').strip())
-        if value <= 0.8:
-            return 'cell-green'
-        elif value <= 1.0:
-            return 'cell-yellow'
-        elif value <= 1.2:
-            return 'cell-orange'
-        else:
-            return 'cell-red'
-    except:
-        return ''
-
+        if value <= 0.8: return 'cell-green'
+        elif value <= 1.0: return 'cell-yellow'
+        elif value <= 1.2: return 'cell-orange'
+        else: return 'cell-red'
+    except: return ''
 
 def get_color_class_for_spread(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai Spread% (MA clustering).
-    Semakin rendah = semakin bagus (MA lebih rapat, sideways lebih jelas).
-    Kriteria:
-    - <= 1%: Green (very tight cluster)
-    - 1.01% - 2%: Yellow
-    - 2.01% - 3%: Orange
-    - > 3%: Red (not clustered)
-    """
     try:
         value = float(str(value_str).replace('%', '').replace('x', '').strip())
-        if value <= 1:
-            return 'cell-green'
-        elif value <= 2:
-            return 'cell-yellow'
-        elif value <= 3:
-            return 'cell-orange'
-        else:
-            return 'cell-red'
-    except:
-        return ''
-
+        if value <= 1: return 'cell-green'
+        elif value <= 2: return 'cell-yellow'
+        elif value <= 3: return 'cell-orange'
+        else: return 'cell-red'
+    except: return ''
 
 def get_color_class_for_pct_change(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai persentase perubahan harga (%C vs PC).
-    Positif = hijau, negatif = merah.
-    """
     try:
         value = float(str(value_str).replace('%', '').replace('+', '').strip())
-        if value > 0:
-            return 'cell-green'       # Harga naik
-        elif value < 0:
-            return 'cell-red'         # Harga turun
-        else:
-            return ''                 # Tidak berubah
-    except:
-        return ''
-
+        if value > 0: return 'cell-green'
+        elif value < 0: return 'cell-red'
+        else: return ''
+    except: return ''
 
 def get_color_class_for_position(value_str):
-    """
-    Mengembalikan class CSS berdasarkan nilai Position.
-    Bullish = hijau, Bearish = merah, Neutral = kuning.
-    """
     value_str = str(value_str).strip()
-    if value_str == 'Bullish':
-        return 'cell-green'
-    elif value_str == 'Bearish':
-        return 'cell-red'         # <-- TAMBAHKAN BARIS INI
-    elif value_str == 'Neutral':
-        return 'cell-yellow'
+    if value_str == 'Bullish': return 'cell-green'
+    elif value_str == 'Bearish': return 'cell-red'
+    elif value_str == 'Neutral': return 'cell-yellow'
     return ''
-
 
 def get_color_class_for_vt_signal(value_str):
-    """
-    Mengembalikan class CSS berdasarkan Volume Trend Signal.
-    Accumulation = hijau, Distribution = merah, Hidden = kuning.
-    """
     value_str = str(value_str).strip()
-    if value_str == 'STRONG ACCUMULATION':
-        return 'cell-green'
-    elif value_str == 'ACCUMULATION':
-        return 'cell-green'
-    elif value_str == 'HIDDEN ACCUMULATION':
-        return 'cell-yellow'
-    elif value_str == 'NEUTRAL':
-        return ''
-    elif value_str == 'HIDDEN DISTRIBUTION':
-        return 'cell-yellow'
-    elif value_str == 'DISTRIBUTION':
-        return 'cell-red'
-    elif value_str == 'STRONG DISTRIBUTION':
-        return 'cell-red'
+    if value_str in ['STRONG ACCUMULATION', 'ACCUMULATION']: return 'cell-green'
+    elif value_str in ['HIDDEN ACCUMULATION', 'HIDDEN DISTRIBUTION']: return 'cell-yellow'
+    elif value_str in ['DISTRIBUTION', 'STRONG DISTRIBUTION']: return 'cell-red'
     return ''
 
-
 def format_colored_cell(value, css_class):
-    """Format cell with color class."""
     if css_class:
         return f'<span class="{css_class}">{value}</span>'
     return str(value)
 
-
 def display_results_table(df, key_prefix=""):
-    """
-    Display results dataframe with styled checkboxes, signal, and colored cells.
-    Uses HTML table for better control over styling.
-    """
-    if df is None or df.empty:
-        return
+    if df is None or df.empty: return
     
-    # Kolom yang menggunakan format persentase (>=80, 50-79.99, <50)
     pct_columns = ['WR', 'Correlation']
-    
-    # Kolom Position dengan warna khusus (Bullish=hijau, Neutral=kuning)
     position_column = 'Position'
-    
-    # Kolom yang menggunakan format rasio (>2, 1-1.99, <1)
     ratio_columns = ['Inflow Ratio', 'Vol Ratio', 'Daily Vol Ratio']
-    
-    # Kolom Avg Val 20D dengan kriteria warna khusus
     avg_val_column = 'Avg Val 20D (B)'
-    
-    # Kolom RRR dengan kriteria warna berbeda
     rrr_column = 'RRR'
-    
-    # Kolom Compression Ratio dengan kriteria warna khusus (lower is better)
     compression_ratio_column = 'Compression Ratio'
-    
-    # Kolom Spread% dengan kriteria warna khusus (lower is better)
     spread_column = 'Spread%'
-    
-    # Kolom %C vs PC dengan warna hijau/merah
     pct_change_column = '%C vs PC'
-    
-    # Kolom OBV Trend dan PVT Trend
     obv_trend_column = 'OBV Trend'
     pvt_trend_column = 'PVT Trend'
-    
-    # OBV Divergence column
     obv_div_column = 'OBV Div'
-    
-    # MACD Divergence column (MYCD)
     macd_div_column = 'MACD Div'
-    
-    # CMF column
     cmf_column = 'CMF'
     
-    # Convert dataframe to HTML table with custom styling
     html = '<table class="custom-table"><thead><tr>'
-    
-    # Add headers
     for col in df.columns:
         html += f'<th>{col}</th>'
     html += '</tr></thead><tbody>'
     
-    # Add rows
     for _, row in df.iterrows():
         html += '<tr>'
         for col in df.columns:
             value = row[col]
             
-            # Check if this is a criteria column (checkboxes)
             if col.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.', '10.')) or col in ('RSI OS', 'Stoch OS'):
                 if value == '☑':
                     html += f'<td><span class="check-yes">☑</span></td>'
                 else:
-                    html += f'<td></td>'  # Empty cell for unchecked
-            # Check if this is the Signal column
+                    html += f'<td></td>'
             elif col == 'Signal':
-                # Check if this is a Volume Trend signal
                 signal_val = str(value).strip()
                 if signal_val in ['STRONG ACCUMULATION', 'ACCUMULATION', 'HIDDEN ACCUMULATION', 
                                    'NEUTRAL', 'HIDDEN DISTRIBUTION', 'DISTRIBUTION', 'STRONG DISTRIBUTION']:
@@ -688,11 +476,9 @@ def display_results_table(df, key_prefix=""):
                     html += f'<td>{format_colored_cell(value, css_class)}</td>'
                 else:
                     html += f'<td>{format_signal(value)}</td>'
-            # Check if this is Position column (Bullish=hijau, Neutral=kuning)
             elif col == position_column:
                 css_class = get_color_class_for_position(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is OBV Trend column
             elif col == obv_trend_column:
                 if value == 'Up':
                     html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
@@ -700,7 +486,6 @@ def display_results_table(df, key_prefix=""):
                     html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
                 else:
                     html += f'<td>{value}</td>'
-            # Check if this is PVT Trend column
             elif col == pvt_trend_column:
                 if value == 'Up':
                     html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
@@ -708,7 +493,6 @@ def display_results_table(df, key_prefix=""):
                     html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
                 else:
                     html += f'<td>{value}</td>'
-            # Check if this is Divergence column
             elif col == obv_div_column:
                 if value == 'Bullish Divergence':
                     html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
@@ -716,7 +500,6 @@ def display_results_table(df, key_prefix=""):
                     html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
                 else:
                     html += f'<td>{value}</td>'
-            # Check if this is MACD Divergence column (MYCD)
             elif col == macd_div_column:
                 if value == 'Bullish Divergence':
                     html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
@@ -724,146 +507,108 @@ def display_results_table(df, key_prefix=""):
                     html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
                 else:
                     html += f'<td>{value}</td>'
-            # Check if this is CMF column
             elif col == cmf_column:
                 try:
                     cmf_val = float(str(value).replace('x', '').strip())
-                    if cmf_val > 0.25:
-                        html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
-                    elif cmf_val > 0.1:
-                        html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
-                    elif cmf_val > 0:
-                        html += f'<td>{format_colored_cell(value, "cell-yellow")}</td>'
-                    elif cmf_val < -0.25:
-                        html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
-                    elif cmf_val < -0.1:
-                        html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
-                    elif cmf_val < 0:
-                        html += f'<td>{format_colored_cell(value, "cell-yellow")}</td>'
-                    else:
-                        html += f'<td>{value}</td>'
-                except:
-                    html += f'<td>{value}</td>'
-            # Check if this is a percentage column that needs coloring
+                    if cmf_val > 0.25: html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
+                    elif cmf_val > 0.1: html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
+                    elif cmf_val > 0: html += f'<td>{format_colored_cell(value, "cell-yellow")}</td>'
+                    elif cmf_val < -0.25: html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
+                    elif cmf_val < -0.1: html += f'<td>{format_colored_cell(value, "cell-red")}</td>'
+                    elif cmf_val < 0: html += f'<td>{format_colored_cell(value, "cell-yellow")}</td>'
+                    else: html += f'<td>{value}</td>'
+                except: html += f'<td>{value}</td>'
             elif col in pct_columns:
                 css_class = get_color_class_for_percentage(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is RRR column with special color logic
             elif col == rrr_column:
                 css_class = get_color_class_for_rrr(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is Compression Ratio column
             elif col == compression_ratio_column:
                 css_class = get_color_class_for_compression_ratio(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is Spread% column
             elif col == spread_column:
                 css_class = get_color_class_for_spread(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is %C vs PC column (green for positive, red for negative)
             elif col == pct_change_column:
                 css_class = get_color_class_for_pct_change(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is a ratio column that needs coloring
             elif col in ratio_columns:
                 css_class = get_color_class_for_ratio(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
-            # Check if this is Avg Val 20D column (higher is better)
             elif col == avg_val_column:
                 try:
                     val = float(str(value).replace('x', '').strip())
-                    if val >= 10:
-                        html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
-                    elif val >= 5:
-                        html += f'<td>{format_colored_cell(value, "cell-yellow")}</td>'
-                    else:
-                        html += f'<td>{value}</td>'
-                except:
-                    html += f'<td>{value}</td>'
+                    if val >= 10: html += f'<td>{format_colored_cell(value, "cell-green")}</td>'
+                    elif val >= 5: html += f'<td>{format_colored_cell(value, "cell-yellow")}</td>'
+                    else: html += f'<td>{value}</td>'
+                except: html += f'<td>{value}</td>'
             else:
                 html += f'<td>{value}</td>'
         html += '</tr>'
     
     html += '</tbody></table>'
-    
-    # Display the HTML table
     st.markdown(html, unsafe_allow_html=True)
 
-
 def display_backtest_table(df):
-    """
-    Display backtest results dataframe with styled checkboxes.
-    Uses HTML table for better control over checkbox styling.
-    """
-    if df is None or df.empty:
-        return
+    if df is None or df.empty: return
     
-    # Convert dataframe to HTML table with custom styling
     html = '<table class="custom-table"><thead><tr>'
-    
-    # Add headers
     for col in df.columns:
         html += f'<th>{col}</th>'
     html += '</tr></thead><tbody>'
     
-    # Add rows
     for _, row in df.iterrows():
         html += '<tr>'
         for col in df.columns:
             value = row[col]
-            
-            # Check if this is a criteria column (checkboxes)
             if col.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.', '10.')):
                 if value == '☑':
                     html += f'<td><span class="check-yes">☑</span></td>'
                 else:
-                    html += f'<td></td>'  # Empty cell for unchecked
+                    html += f'<td></td>'
             else:
                 html += f'<td>{value}</td>'
         html += '</tr>'
     
     html += '</tbody></table>'
-    
-    # Display the HTML table
     st.markdown(html, unsafe_allow_html=True)
 
-
-# Period options for backtest (defined globally)
 period_options = {"1 Year": "1y", "2 Years": "2y", "3 Years": "3y", "5 Years": "5y", "10 Years": "10y"}
-
 
 # --- Main Application ---
 def main():
-    # Header
     st.markdown('<p class="main-header">💰 Auto Stock Screener</p>', unsafe_allow_html=True)
     st.markdown("---")
 
-    # Sidebar
     st.sidebar.title("📊 Menu")
     st.sidebar.info(
         "Application for stock screening.\n\n"
         "**Types of Screeners :**\n"
-        "1. Sideways Screener\n"
-        "2. Oversold Screener\n"
-        "3. Demand Zone Screener\n"
-        "4. Cari Demand/Supply Zone\n"
-        "5. FVG Screener\n"
-        "6. Decreasing Highs\n"
-        "7. Magic Screener V1.1\n"
-        "8. Magic Screener V1.3\n"
-        "9. BB Reversal\n"
-        "10. IV Rank\n"
-        "11. Bullish Harami\n"
-        "12. 1 Day Reversal\n"
-        "13. Volume Trend Screener\n"
-        "14. Volume Profile Screener\n"
-        "15. Backtest for each type"
+        "1. Bullish Divergence\n"
+        "2. Sideways Screener\n"
+        "3. Oversold Screener\n"
+        "4. Demand Zone Screener\n"
+        "5. Cari Demand/Supply Zone\n"
+        "6. FVG Screener\n"
+        "7. Decreasing Highs\n"
+        "8. Magic Screener V1.1\n"
+        "9. Magic Screener V1.3\n"
+        "10. BB Reversal\n"
+        "11. IV Rank\n"
+        "12. Bullish Harami\n"
+        "13. 1 Day Reversal\n"
+        "14. Volume Trend Screener\n"
+        "15. Volume Profile Screener\n"
+        "16. Backtest for each type"
     )
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("**📍 Navigation**")
 
-    # Navigation buttons with JavaScript scroll
+    if st.sidebar.button("📈 Bullish Divergence", use_container_width=True):
+        scroll_to_section("section_bd")
+
     if st.sidebar.button("📈 Sideways Screener", use_container_width=True):
         scroll_to_section("section_dz")
 
@@ -938,13 +683,22 @@ def main():
 
     st.sidebar.markdown("---")
     
-    # Column Legend
     st.sidebar.markdown("**📋 Keterangan Kolom :**")
     with st.sidebar.expander("Lihat Keterangan", expanded=False):
         st.markdown("""
         **Tickers** : Kode emiten
         
         **Price** : Harga penutupan terakhir
+        
+        **Jaw/Teeth/Lips** : Nilai garis Alligator (SMMA 13, 8, 5)
+        
+        **AO** : Awesome Oscillator (SMA 5 - SMA 34 dari Median Price)
+        
+        **AC** : Accelerator Oscillator (AO - SMA 5 dari AO)
+        
+        **Buy Price** : Harga entry (1 tick di atas Up Fractal terakhir)
+        
+        **SL Price** : Harga Stop Loss (3 tick di bawah Down Fractal terakhir)
         
         **LB** : Lower Band Bollinger (khusus BB Reversal)
         
@@ -1010,6 +764,75 @@ def main():
         st.rerun()
 
     # ============================
+    # Bullish Divergence Screener
+    # ============================
+    st.markdown('<div id="section_bd"></div>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">📈 Bullish Divergence Screener</p>', unsafe_allow_html=True)
+    
+    with st.expander("📋 Buy Criteria Bullish Divergence", expanded=False):
+        st.markdown("""
+        **Main Criteria :**
+        - Low hari ini < Low kemarin (Membuat lower low / sisa downtrend).
+        - Close hari ini berada di setengah atas bar (Upper half = menolak harga turun).
+        
+        **Exit Strategy :**
+        - **Buy Price**: High hari ini + 1 tick.
+        - **Stop Loss**: Low hari ini - 1 tick.
+        
+        **Columns:**
+        - **Low Today / Low Yesterday**: Perbandingan harga terendah untuk melihat lower low.
+        - **Buy Price**: Harga entry (High hari ini + 1 tick).
+        - **SL Price**: Harga Stop Loss (Low hari ini - 1 tick).
+        """)
+
+    col_date_bd, col_btn_bd, col_info_bd = st.columns([1, 1, 2])
+    with col_date_bd:
+        selected_date_bd = st.date_input("📅 Tanggal :", value=date.today(), key="date_bd", format="DD/MM/YYYY")
+    with col_btn_bd:
+        if st.button("🚀 Run Bullish Divergence", key="btn_bd", use_container_width=True):
+            results = []
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            total_tickers = len(tickers_bd)
+
+            with st.spinner(f"Scanning {total_tickers} tickers..."):
+                for idx, ticker_item in enumerate(tickers_bd):
+                    progress = (idx + 1) / total_tickers
+                    progress_bar.progress(progress)
+                    status_text.text(f"Processing {idx + 1}/{total_tickers}: {ticker_item.replace('.JK', '')}")
+                    try:
+                        output = run_bullish_divergence_screener(None, ticker_item, target_date=selected_date_bd)
+                        if output:
+                            results.append(output)
+                    except Exception:
+                        pass
+
+            progress_bar.empty()
+            status_text.empty()
+
+            if results:
+                df_results = pd.DataFrame(results)
+                st.session_state.bd_results = df_results
+            else:
+                st.session_state.bd_results = pd.DataFrame()
+            st.rerun()
+
+    with col_info_bd:
+        st.info("🔎 Scan for stocks showing bullish divergence (lower low but close in upper half)")
+
+    if st.session_state.bd_results is not None:
+        if not st.session_state.bd_results.empty:
+            st.markdown('<div class="success-box">✅ Scan Completed!</div>', unsafe_allow_html=True)
+            st.write(f"📊 **{len(st.session_state.bd_results)} stock** found")
+            display_results_table(st.session_state.bd_results, "bd")
+            csv = st.session_state.bd_results.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Download CSV", data=csv, file_name="bullish_divergence_screener.csv", mime="text/csv", key="dl_bd")
+        else:
+            st.warning("⚠️ No stocks meet the criteria")
+
+    st.markdown("---")
+
+    # ============================
     # Sideways Screener
     # ============================
     st.markdown('<div id="section_dz"></div>', unsafe_allow_html=True)
@@ -1048,7 +871,6 @@ def main():
         - **Side Days**: Jumlah hari MA cluster bertahan
         """)
 
-    # Date picker
     col_date8, col_btn8, col_info8 = st.columns([1, 1, 2])
     with col_date8:
         selected_date_dz = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_dz", format="DD/MM/YYYY")
@@ -1059,7 +881,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_dz)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_dz)
             total_dates = len(dates_to_scan)
 
@@ -1081,7 +902,6 @@ def main():
 
             if results:
                 df_results = pd.DataFrame(results)
-                # Sort by Spread% ascending (tighter spread = better)
                 if 'Spread%' in df_results.columns:
                     df_results['Spread_numeric'] = df_results['Spread%'].str.rstrip('%').astype(float)
                     df_results = df_results.sort_values(by=['Spread_numeric'], ascending=[True]).reset_index(drop=True)
@@ -1184,10 +1004,9 @@ def main():
         - **Signal**: STRONG BUY atau BUY
         """)
 
-    # Run button
     col_date_os, col_btn_os, col_info_os = st.columns([1, 1, 2])
     with col_date_os:
-        st.write("")  # No date picker needed
+        st.write("")
     with col_btn_os:
         if st.button("🚀 Run Oversold Screener", key="btn_os", use_container_width=True):
             results = []
@@ -1212,7 +1031,6 @@ def main():
 
             if results:
                 df_results = pd.DataFrame(results)
-                # Sort by RSI ascending (most oversold first)
                 if 'RSI' in df_results.columns:
                     df_results['RSI_numeric'] = df_results['RSI'].astype(float)
                     df_results = df_results.sort_values(by=['RSI_numeric'], ascending=[True]).reset_index(drop=True)
@@ -1314,10 +1132,9 @@ def main():
         - **RRR**: Risk-Reward Ratio (jarak ke supply / jarak ke demand low)
         """)
 
-    # Run button
     col_date_dmz, col_btn_dmz, col_info_dmz = st.columns([1, 1, 2])
     with col_date_dmz:
-        st.write("")  # No date picker needed
+        st.write("")
     with col_btn_dmz:
         if st.button("🚀 Run Demand Zone Screener", key="btn_dmz", use_container_width=True):
             results = []
@@ -1342,7 +1159,6 @@ def main():
 
             if results:
                 df_results = pd.DataFrame(results)
-                # Sort by RRR descending (higher RRR = better)
                 if 'RRR' in df_results.columns:
                     df_results['RRR_numeric'] = df_results['RRR'].apply(lambda x: float(x.replace('x', '')) if x else 0)
                     df_results = df_results.sort_values(by=['RRR_numeric'], ascending=[False]).reset_index(drop=True)
@@ -1399,7 +1215,6 @@ def main():
         if result:
             st.markdown('<div class="success-box">✅ Data ditemukan!</div>', unsafe_allow_html=True)
             
-            # Format data untuk tabel
             inflow = result['Inflow Ratio']
             comp = result['Compression Ratio']
             rrr = result['RRR']
@@ -1458,10 +1273,9 @@ def main():
         - **Trend** : Trend 5 hari terakhir
         """)
 
-    # Date picker
     col_date_fvg, col_btn_fvg, col_info_fvg = st.columns([1, 1, 2])
     with col_date_fvg:
-        st.write("")  # FVG doesn't need date picker, it scans latest data
+        st.write("")
     with col_btn_fvg:
         if st.button("🚀 Run FVG Screener", key="btn_fvg", use_container_width=True):
             results = []
@@ -1486,7 +1300,6 @@ def main():
 
             if results:
                 df_results = pd.DataFrame(results)
-                # Sort by FVG Size (larger = stronger momentum)
                 if 'FVG Size%' in df_results.columns:
                     df_results['FVG_Size_numeric'] = df_results['FVG Size%'].str.rstrip('%').astype(float)
                     df_results = df_results.sort_values(by=['FVG_Size_numeric'], ascending=[False]).reset_index(drop=True)
@@ -1581,7 +1394,6 @@ def main():
         for potential reversal/bounce play.
         """)
 
-    # Date picker
     col_date7, col_btn7, col_info7 = st.columns([1, 1, 2])
     with col_date7:
         selected_date_dh = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_dh", format="DD/MM/YYYY")
@@ -1592,7 +1404,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_dh)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_dh)
             total_dates = len(dates_to_scan)
 
@@ -1692,7 +1503,6 @@ def main():
         - Price >= 100
         """)
 
-    # Date picker
     col_date1, col_btn1, col_info1 = st.columns([1, 1, 2])
     with col_date1:
         selected_date_v11 = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_v11", format="DD/MM/YYYY")
@@ -1703,7 +1513,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_v11)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_v11)
             total_dates = len(dates_to_scan)
 
@@ -1809,7 +1618,6 @@ def main():
         - Price >= 100
         """)
 
-    # Date picker
     col_date2, col_btn2, col_info2 = st.columns([1, 1, 2])
     with col_date2:
         selected_date_v13 = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_v13", format="DD/MM/YYYY")
@@ -1820,7 +1628,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_v13)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_v13)
             total_dates = len(dates_to_scan)
 
@@ -1922,7 +1729,6 @@ def main():
         - Price >= 100
         """)
 
-    # Date picker
     col_date3, col_btn3, col_info3 = st.columns([1, 1, 2])
     with col_date3:
         selected_date_bb = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_bb", format="DD/MM/YYYY")
@@ -1933,7 +1739,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_bb)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_bb)
             total_dates = len(dates_to_scan)
 
@@ -2045,7 +1850,6 @@ def main():
         - Otherwise exit at next day's close
         """)
 
-    # Date picker
     col_date4, col_btn4, col_info4 = st.columns([1, 1, 2])
     with col_date4:
         selected_date_iv = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_iv", format="DD/MM/YYYY")
@@ -2056,7 +1860,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_iv)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_iv)
             total_dates = len(dates_to_scan)
 
@@ -2165,7 +1968,6 @@ def main():
         - Otherwise exit at next day's close
         """)
 
-    # Date picker
     col_date5, col_btn5, col_info5 = st.columns([1, 1, 2])
     with col_date5:
         selected_date_bh = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_bh", format="DD/MM/YYYY")
@@ -2176,7 +1978,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_bh)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_bh)
             total_dates = len(dates_to_scan)
 
@@ -2283,7 +2084,6 @@ def main():
         - Otherwise exit at next day's close
         """)
 
-    # Date picker
     col_date6, col_btn6, col_info6 = st.columns([1, 1, 2])
     with col_date6:
         selected_date_dr = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_dr", format="DD/MM/YYYY")
@@ -2294,7 +2094,6 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_1dr)
             
-            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_dr)
             total_dates = len(dates_to_scan)
 
@@ -2410,7 +2209,6 @@ def main():
         - CMF < -0.25 : Distribusi kuat
         """)
     
-    # Initialize session state
     if 'vt_results' not in st.session_state:
         st.session_state.vt_results = None
     
@@ -2444,7 +2242,6 @@ def main():
             
             if results:
                 df_results = pd.DataFrame(results)
-                # Sort by Signal priority
                 signal_order = {
                     'STRONG ACCUMULATION': 1,
                     'ACCUMULATION': 2,
@@ -2501,7 +2298,6 @@ def main():
         - **VAL**: Value Area Low (batas bawah area value 70%).
         """)
 
-    # Date picker & Run button
     col_date_vp, col_btn_vp, col_info_vp = st.columns([1, 1, 2])
     with col_date_vp:
         selected_date_vp = st.date_input("📅 Tanggal :", value=date.today(), key="date_vp", format="DD/MM/YYYY")
@@ -2518,7 +2314,6 @@ def main():
                     progress_bar.progress(progress)
                     status_text.text(f"Processing {idx + 1}/{total_tickers}: {ticker_item.replace('.JK', '')}")
                     try:
-                        # Memanggil fungsi dari screener_vp.py
                         output = run_vp_screener(None, ticker_item, target_date=selected_date_vp)
                         if output:
                             results.append(output)
@@ -2549,7 +2344,6 @@ def main():
             st.warning("⚠️ No stocks meet the criteria")
 
     st.markdown("---")
-
 
     # Footer
     st.markdown("""
