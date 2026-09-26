@@ -21,12 +21,6 @@ def get_15min_data(ticker, period='1mo'):
         return None
 
 def calculate_intraday_score(df_15m, daily_high, daily_low, daily_close):
-    """
-    Menghitung nilai Intraday HANYA untuk kolom yang ditampilkan di tabel:
-    1. Position (Posisi Close di rentang harian)
-    2. Volume Ratio (Rasio volume 15 menit terakhir dibanding rata-rata harian)
-    Perhitungan skor, momentum, TP/SL dihapus karena tidak ditampilkan di tabel akhir.
-    """
     if df_15m is None or len(df_15m) < 10:
         return {'position': 0, 'volume_ratio': 0}
     
@@ -37,14 +31,12 @@ def calculate_intraday_score(df_15m, daily_high, daily_low, daily_close):
         if len(df_today) < 5:
             return {'position': 0, 'volume_ratio': 0}
         
-        # 1. CLOSE POSITION
         today_range = daily_high - daily_low
         if today_range > 0:
             close_position = (daily_close - daily_low) / today_range
         else:
             close_position = 0.5
         
-        # 2. VOLUME RATIO (Max 2)
         avg_volume = df_today['Volume'].mean()
         last_volume = df_today.iloc[-1]['Volume']
         volume_ratio = last_volume / avg_volume if avg_volume > 0 else 1
@@ -110,17 +102,17 @@ def _calculate_backtest_summary(df, min_gain_pct=1.36, stop_loss_pct=2.0):
 
     trade_profits = []
     
+    # kondisi 1. PR, 3. MA+, dan 6. O=PC dihapus dari conditions_data
+    # kondisi 11. PC<PMA5 ditambahkan
     conditions_data = {
-        '1. PR': {'total': 0, 'success': 0},
         '2. V>MA20': {'total': 0, 'success': 0},
-        '3. MA+': {'total': 0, 'success': 0},
         '4. L>PL': {'total': 0, 'success': 0},
         '5. H>PH': {'total': 0, 'success': 0},
-        '6. O=PC': {'total': 0, 'success': 0},
         '7. OL>HC': {'total': 0, 'success': 0},
         '8. C>VWAP': {'total': 0, 'success': 0},
         '9. PC<PVWAP': {'total': 0, 'success': 0},
         '10. V>MA5': {'total': 0, 'success': 0},
+        '11. PC<PMA5': {'total': 0, 'success': 0}, # Tambahan kriteria baru
         'Inflow Ratio': {'success_inflow': [], 'fail_inflow': []}
     }
 
@@ -160,33 +152,26 @@ def _calculate_backtest_summary(df, min_gain_pct=1.36, stop_loss_pct=2.0):
             else:
                 inflow_ratio = 0
             
-            cond_prev_red_candle = prev_day['Close'] < prev_day['Open']
+            # Perhitungan kondisi yang tersisa
             cond_vol_above_ma20 = signal_day['Volume'] > signal_day['Volume_MA_20']
-            cond_ma_uptrend = (
-                signal_day['MA5'] > signal_day['MA10'] and
-                signal_day['MA10'] > signal_day['MA20'] and
-                signal_day['MA20'] > signal_day['MA50'] and
-                signal_day['MA50'] > signal_day['MA200']
-            )
             cond_low_greater_prev_low = signal_day['Low'] > prev_day['Low']
             cond_high_greater_prev_high = signal_day['High'] > prev_day['High']
-            cond_open_equal_prev_close = signal_day['Open'] == prev_day['Close']
             cond_open_low_greater_high_close = (signal_day['Open'] - signal_day['Low']) > (signal_day['High'] - signal_day['Close'])
             cond_close_above_vwap = signal_day['Close'] > signal_day['VWAP_Daily']
             cond_prev_close_below_prev_vwap = prev_day['Close'] < prev_day['VWAP_Daily']
             cond_vol_above_ma5 = signal_day['Volume'] > signal_day['Volume_MA_5']
+            # cond_prev_close_below_ma5 sudah dihitung di atas, namun tetap dipetakan disini
             
+            # Kondisi 1, 3, dan 6 dihilangkan dari mapping
             conditions_map = {
-                '1. PR': cond_prev_red_candle,
                 '2. V>MA20': cond_vol_above_ma20,
-                '3. MA+': cond_ma_uptrend,
                 '4. L>PL': cond_low_greater_prev_low,
                 '5. H>PH': cond_high_greater_prev_high,
-                '6. O=PC': cond_open_equal_prev_close,
                 '7. OL>HC': cond_open_low_greater_high_close,
                 '8. C>VWAP': cond_close_above_vwap,
                 '9. PC<PVWAP': cond_prev_close_below_prev_vwap,
-                '10. V>MA5': cond_vol_above_ma5
+                '10. V>MA5': cond_vol_above_ma5,
+                '11. PC<PMA5': cond_prev_close_below_ma5
             }
             
             for cond_name, cond_value in conditions_map.items():
@@ -300,7 +285,6 @@ def run_magic_screener(df, ticker_item, target_date=None):
     else:
         inflow_ratio = 0
 
-    # PERHITUNGAN VOL RATIO (Permintaan poin 3)
     vol_ratio = latest_volume / latest_volume_ma_20 if latest_volume_ma_20 > 0 else 0
 
     previous_close = float(previous['Close'])
@@ -320,17 +304,11 @@ def run_magic_screener(df, ticker_item, target_date=None):
     cond_prev_close_below_ma5 = previous_close < previous_ma5
     cond_current_day_green_candle = latest_close > latest['Open']
 
-    cond_prev_red_candle = previous_close < previous_open
+    # Perhitungan kondisi tambahan yang tersisa untuk hari ini
     cond_vol_above_ma20 = latest_volume > latest_volume_ma_20
     cond_open_equal_prev_close = latest_open == previous_close
     cond_low_greater_prev_low = latest_low > previous_low
     cond_high_greater_prev_high = latest_high > previous_high
-    cond_ma_uptrend = (
-        latest_ma5 > latest_ma10 and
-        latest_ma10 > latest_ma20 and
-        latest_ma20 > latest_ma50 and
-        latest_ma50 > latest_ma200
-    )
     cond_open_low_greater_high_close = (latest_open - latest_low) > (latest_high - latest_close)
     cond_close_above_vwap = latest_close > latest_vwap
     cond_prev_close_below_prev_vwap = previous_close < previous_vwap
@@ -350,17 +328,16 @@ def run_magic_screener(df, ticker_item, target_date=None):
         
         correlation = backtest_metrics.get('correlation', {})
         
+        # Cek kondisi yang terpenuhi hari ini (1, 3, dan 6 dihilangkan)
         conditions_check = [
-            ('1. PR', cond_prev_red_candle),
             ('2. V>MA20', cond_vol_above_ma20),
-            ('3. MA+', cond_ma_uptrend),
             ('4. L>PL', cond_low_greater_prev_low),
             ('5. H>PH', cond_high_greater_prev_high),
-            ('6. O=PC', cond_open_equal_prev_close),
             ('7. OL>HC', cond_open_low_greater_high_close),
             ('8. C>VWAP', cond_close_above_vwap),
             ('9. PC<PVWAP', cond_prev_close_below_prev_vwap),
-            ('10. V>MA5', cond_vol_above_ma5)
+            ('10. V>MA5', cond_vol_above_ma5),
+            ('11. PC<PMA5', cond_prev_close_below_ma5) # Tambahan kriteria baru
         ]
         
         win_rates = []
