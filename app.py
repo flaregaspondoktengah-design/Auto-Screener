@@ -486,6 +486,17 @@ def main():
     # Magic Screener V1.1
     # ============================
     st.markdown('<p class="sub-header">📈 Magic Screener V1.1</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    **Buy Criteria V1.1:**
+    - Vol > Prev Vol
+    - Close > Prev Close
+    - Close > MA5
+    - Value > 5 billion
+    - Prev Close < Prev MA5
+    - Close > Open
+    - Price >= 100
+    """)
 
     col_date1, col_btn1, col_info1 = st.columns([1, 1, 2])
     with col_date1:
@@ -592,6 +603,18 @@ def main():
     # Magic Screener V1.3
     # ============================
     st.markdown('<p class="sub-header">📈 Magic Screener V1.3</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    **Buy Criteria V1.3:**
+    - Vol > Prev Vol
+    - Close > Prev Close
+    - Close > MA5
+    - Value > 5 billion
+    - Close > Open
+    - **Yesterday : Close > Open and Close > MA5**
+    - **2 Days Ago : Close > Open and Close > MA5**
+    - Price >= 100
+    """)
 
     col_date2, col_btn2, col_info2 = st.columns([1, 1, 2])
     with col_date2:
@@ -690,6 +713,18 @@ def main():
     # BB Reversal
     # ============================
     st.markdown('<p class="sub-header">📈 BB Reversal</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    **Buy Criteria BB Reversal:**
+    - Vol > Prev Vol
+    - Close > Prev Close
+    - Close > Open
+    - Value > 1 billion
+    - Prev Close < Prev Open
+    - Close > Lower Band Bollinger
+    - Prev Close < Prev Lower Band Bollinger
+    - Price >= 100
+    """)
 
     col_date3, col_btn3, col_info3 = st.columns([1, 1, 2])
     with col_date3:
@@ -788,6 +823,17 @@ def main():
     # Bullish Divergence Screener
     # ============================
     st.markdown('<p class="sub-header">📈 Bullish Divergence Screener</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    **Buy Criteria Bullish Divergence:**
+    - Low hari ini < Low kemarin (Membuat lower low / sisa downtrend).
+    - Close hari ini berada di setengah atas bar (Upper half = menolak harga turun).
+    - Awesome Oscillator (AO) < 0 (Momentum indikator masih bearish).
+    
+    **Exit Strategy :**
+    - **Buy Price**: High hari ini + 1 tick.
+    - **Stop Loss**: Low hari ini - 1 tick.
+    """)
 
     col_date_bd, col_btn_bd, col_info_bd = st.columns([1, 1, 2])
     with col_date_bd:
@@ -840,6 +886,12 @@ def main():
     # Sideways Screener
     # ============================
     st.markdown('<p class="sub-header">📈 Sideways Screener</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    **Buy Criteria Sideways Screener:**
+    - MA5, MA10, MA20 Clustered (sideways detection)
+    - Average 20-Day Transaction Value >= 5 Billion Rupiah
+    """)
 
     col_date8, col_btn8, col_info8 = st.columns([1, 1, 2])
     with col_date8:
