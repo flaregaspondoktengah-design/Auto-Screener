@@ -14,8 +14,6 @@ from screener_bb_reversal import run_bb_reversal_screener, tickers as tickers_bb
 from backtest_bb_reversal import run_backtest_bb_reversal_for_ticker, get_ticker_list as get_ticker_list_bb
 from screener_bullish_div import run_bullish_divergence_screener, tickers as tickers_bd
 from screener_sideways import run_sideways_screener, tickers as tickers_dz
-from screener_alligator import run_alligator_screener, tickers as tickers_ag
-
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -207,9 +205,6 @@ if 'bb_bt_summary' not in st.session_state:
 if 'dz_results' not in st.session_state:
     st.session_state.dz_results = None
 
-if 'ag_results' not in st.session_state:
-    st.session_state.ag_results = None
-
 # --- Helper Functions ---
 def clear_all():
     st.session_state.bd_results = None
@@ -223,7 +218,6 @@ def clear_all():
     st.session_state.bb_bt_results = None
     st.session_state.bb_bt_summary = None
     st.session_state.dz_results = None
-    st.session_state.ag_results = None
 
 def get_dates_in_range(date_input):
     if isinstance(date_input, tuple):
@@ -960,67 +954,6 @@ def main():
             display_results_table(st.session_state.dz_results, "dz")
             csv = st.session_state.dz_results.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Download CSV", data=csv, file_name="sideways_screener.csv", mime="text/csv", key="dl_dz")
-        else:
-            st.warning("⚠️ No stocks meet the criteria")
-
-    st.markdown("---")
-
-    # ============================
-    # Alligator Screener
-    # ============================
-    st.markdown('<p class="sub-header">📈 Alligator Screener</p>', unsafe_allow_html=True)
-    
-    with st.expander("📋 Buy Criteria Alligator", expanded=False):
-        st.markdown("""
-        **Main Criteria :**
-        - Alligator terbuka ke atas (Lips > Teeth > Jaw).
-        - Jaw Length: 13, Offset: 8
-        - Teeth Length: 8, Offset: 5
-        - Lips Length: 5, Offset: 3
-        """)
-
-    col_date_ag, col_btn_ag, col_info_ag = st.columns([1, 1, 2])
-    with col_date_ag:
-        selected_date_ag = st.date_input("📅 Tanggal :", value=date.today(), key="date_ag", format="DD/MM/YYYY")
-    with col_btn_ag:
-        if st.button("🚀 Run Alligator", key="btn_ag", use_container_width=True):
-            results = []
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            total_tickers = len(tickers_ag)
-
-            with st.spinner(f"Scanning {total_tickers} tickers..."):
-                for idx, ticker_item in enumerate(tickers_ag):
-                    progress = (idx + 1) / total_tickers
-                    progress_bar.progress(progress)
-                    status_text.text(f"Processing {idx + 1}/{total_tickers}: {ticker_item.replace('.JK', '')}")
-                    try:
-                        output = run_alligator_screener(None, ticker_item, target_date=selected_date_ag)
-                        if output:
-                            results.append(output)
-                    except Exception:
-                        pass
-
-            progress_bar.empty()
-            status_text.empty()
-
-            if results:
-                df_results = pd.DataFrame(results)
-                st.session_state.ag_results = df_results
-            else:
-                st.session_state.ag_results = pd.DataFrame()
-            st.rerun()
-
-    with col_info_ag:
-        st.info("🔎 Scan for stocks with Alligator open bullish (Lips > Teeth > Jaw)")
-
-    if st.session_state.ag_results is not None:
-        if not st.session_state.ag_results.empty:
-            st.markdown('<div class="success-box">✅ Scan Completed!</div>', unsafe_allow_html=True)
-            st.write(f"📊 **{len(st.session_state.ag_results)} stock** found")
-            display_results_table(st.session_state.ag_results, "ag")
-            csv = st.session_state.ag_results.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Download CSV", data=csv, file_name="alligator_screener.csv", mime="text/csv", key="dl_ag")
         else:
             st.warning("⚠️ No stocks meet the criteria")
 
