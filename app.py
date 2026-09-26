@@ -446,7 +446,7 @@ def display_results_table(df, key_prefix=""):
     rrr_column = 'RRR'
     compression_ratio_column = 'Compression Ratio'
     spread_column = 'Spread%'
-    pct_change_column = '%C vs PC'
+    pct_change_column = '1D Return'
     obv_trend_column = 'OBV Trend'
     pvt_trend_column = 'PVT Trend'
     obv_div_column = 'OBV Div'
@@ -476,8 +476,15 @@ def display_results_table(df, key_prefix=""):
                     html += f'<td>{format_colored_cell(value, css_class)}</td>'
                 else:
                     html += f'<td>{format_signal(value)}</td>'
+                        # Check if this is Position column
             elif col == position_column:
-                css_class = get_color_class_for_position(value)
+                value_str = str(value).strip()
+                if value_str.endswith('%'):
+                    # Jika berbentuk persentase (Magic Screener V1.1)
+                    css_class = get_color_class_for_percentage(value)
+                else:
+                    # Jika berbentuk teks (Sideways Screener)
+                    css_class = get_color_class_for_position(value)
                 html += f'<td>{format_colored_cell(value, css_class)}</td>'
             elif col == obv_trend_column:
                 if value == 'Up':
@@ -1503,6 +1510,7 @@ def main():
         - Price >= 100
         """)
 
+    # Date picker
     col_date1, col_btn1, col_info1 = st.columns([1, 1, 2])
     with col_date1:
         selected_date_v11 = st.date_input("📅 Tanggal :", value=(date.today(), date.today()), key="date_v11", format="DD/MM/YYYY")
@@ -1513,6 +1521,7 @@ def main():
             status_text = st.empty()
             total_tickers = len(tickers_v11)
             
+            # Get all dates in range
             dates_to_scan = get_dates_in_range(selected_date_v11)
             total_dates = len(dates_to_scan)
 
@@ -1534,14 +1543,21 @@ def main():
 
             if results:
                 df_results = pd.DataFrame(results)
+                
+                # TAMBAHAN: Mengatur urutan kolom sesuai permintaan
+                column_order = ['Date', 'Tickers', 'Price', 'Trades', 'WR', '1D Return', 'Position', 'Correlation', 'Inflow Ratio', 'Daily Vol Ratio', 'Vol Ratio']
+                df_results = df_results[[col for col in column_order if col in df_results.columns]]
+                
+                # Proses sortiran data
                 df_results['Price_numeric'] = df_results['Price'].str.replace(',', '').astype(float)
-                df_results['Pct_C_vs_PC_numeric'] = df_results['%C vs PC'].str.rstrip('%').astype(float)
+                df_results['1D_Return_numeric'] = df_results['1D Return'].str.rstrip('%').astype(float)
                 df_results['WR_numeric'] = df_results['WR'].str.rstrip('%').astype(float)
                 df_results = df_results.sort_values(
-                    by=['WR_numeric', 'Pct_C_vs_PC_numeric', 'Price_numeric'],
+                    by=['WR_numeric', '1D_Return_numeric', 'Price_numeric'],
                     ascending=[False, False, False]
                 ).reset_index(drop=True)
-                df_results = df_results.drop(columns=['Price_numeric', 'Pct_C_vs_PC_numeric', 'WR_numeric'])
+                df_results = df_results.drop(columns=['Price_numeric', '1D_Return_numeric', 'WR_numeric'])
+                
                 st.session_state.v11_results = df_results
             else:
                 st.session_state.v11_results = pd.DataFrame()
