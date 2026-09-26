@@ -477,39 +477,7 @@ def main():
     st.markdown('<p class="main-header">💰 Auto Stock Screener</p>', unsafe_allow_html=True)
     st.markdown("---")
 
-    # Sidebar Legend & Clear All
-    st.sidebar.markdown("**📋 Keterangan Kolom :**")
-    with st.sidebar.expander("Lihat Keterangan", expanded=False):
-        st.markdown("""
-        **Tickers** : Kode emiten
-        
-        **Price** : Harga penutupan terakhir
-        
-        **1D Return** : Persentase perubahan harga dari harga kemarin
-        
-        **WR** : Win Rate
-        
-        **Trades** : Jumlah transaksi historis dengan setup sesuai kriteria
-        
-        **Position** : Posisi close dalam range harian
-        
-        **Correlation** : Rata-rata WR dari kondisi yang terpenuhi
-        
-        **Inflow Ratio** : Value hari ini / (MA20 * Vol MA20)
-        
-        **Daily Vol Ratio** : Volume 15 menit terakhir / rata-rata volume 15 menit harian
-        
-        **Vol Ratio** : Volume hari ini / Volume MA 20
-        
-        **Buy Price** : Harga entry (High hari ini + 1 tick)
-        
-        **SL Price** : Harga Stop Loss (Low hari ini - 1 tick)
-        
-        **Low Today / Low Yesterday** : Perbandingan harga terendah untuk melihat lower low.
-        """)
-
-    st.sidebar.markdown("---")
-
+    # Sidebar Clear All
     if st.sidebar.button("🗑️ Clear All Results", use_container_width=True):
         clear_all()
         st.rerun()
@@ -518,18 +486,6 @@ def main():
     # Magic Screener V1.1
     # ============================
     st.markdown('<p class="sub-header">📈 Magic Screener V1.1</p>', unsafe_allow_html=True)
-    
-    with st.expander("📋 Buy Criteria V1.1", expanded=False):
-        st.markdown("""
-        **Main Criteria :**
-        - Vol > Prev Vol
-        - Close > Prev Close
-        - Close > MA5
-        - Value > 5 billion
-        - Prev Close < Prev MA5
-        - Close > Open
-        - Price >= 100
-        """)
 
     col_date1, col_btn1, col_info1 = st.columns([1, 1, 2])
     with col_date1:
@@ -636,19 +592,6 @@ def main():
     # Magic Screener V1.3
     # ============================
     st.markdown('<p class="sub-header">📈 Magic Screener V1.3</p>', unsafe_allow_html=True)
-    
-    with st.expander("📋 Buy Criteria V1.3", expanded=False):
-        st.markdown("""
-        **Main Criteria :**
-        - Vol > Prev Vol
-        - Close > Prev Close
-        - Close > MA5
-        - Value > 5 billion
-        - Close > Open
-        - **Yesterday : Close > Open and Close > MA5**
-        - **2 Days Ago : Close > Open and Close > MA5**
-        - Price >= 100
-        """)
 
     col_date2, col_btn2, col_info2 = st.columns([1, 1, 2])
     with col_date2:
@@ -747,19 +690,6 @@ def main():
     # BB Reversal
     # ============================
     st.markdown('<p class="sub-header">📈 BB Reversal</p>', unsafe_allow_html=True)
-    
-    with st.expander("📋 Buy Criteria BB Reversal", expanded=False):
-        st.markdown("""
-        **Main Criteria :**
-        - Vol > Prev Vol
-        - Close > Prev Close
-        - Close > Open
-        - Value > 1 billion
-        - Prev Close < Prev Open
-        - Close > Lower Band Bollinger
-        - Prev Close < Prev Lower Band Bollinger
-        - Price >= 100
-        """)
 
     col_date3, col_btn3, col_info3 = st.columns([1, 1, 2])
     with col_date3:
@@ -858,24 +788,6 @@ def main():
     # Bullish Divergence Screener
     # ============================
     st.markdown('<p class="sub-header">📈 Bullish Divergence Screener</p>', unsafe_allow_html=True)
-    
-    with st.expander("📋 Buy Criteria Bullish Divergence", expanded=False):
-        st.markdown("""
-        **Main Criteria :**
-        - Low hari ini < Low kemarin (Membuat lower low / sisa downtrend).
-        - Close hari ini berada di setengah atas bar (Upper half = menolak harga turun).
-        - Awesome Oscillator (AO) < 0 (Momentum indikator masih bearish).
-        
-        **Exit Strategy :**
-        - **Buy Price**: High hari ini + 1 tick.
-        - **Stop Loss**: Low hari ini - 1 tick.
-        
-        **Columns:**
-        - **Low Today / Low Yesterday**: Perbandingan harga terendah untuk melihat lower low.
-        - **AO**: Awesome Oscillator (SMA 5 - SMA 34 dari Median Price).
-        - **Buy Price**: Harga entry (High hari ini + 1 tick).
-        - **SL Price**: Harga Stop Loss (Low hari ini - 1 tick).
-        """)
 
     col_date_bd, col_btn_bd, col_info_bd = st.columns([1, 1, 2])
     with col_date_bd:
@@ -928,13 +840,6 @@ def main():
     # Sideways Screener
     # ============================
     st.markdown('<p class="sub-header">📈 Sideways Screener</p>', unsafe_allow_html=True)
-    
-    with st.expander("📋 Buy Criteria Sideways Screener", expanded=False):
-        st.markdown("""
-        **Main Criteria :**
-        - MA5, MA10, MA20 Clustered (sideways detection)
-        - Average 20-Day Transaction Value >= 5 Billion Rupiah
-        """)
 
     col_date8, col_btn8, col_info8 = st.columns([1, 1, 2])
     with col_date8:
