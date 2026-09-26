@@ -26,9 +26,26 @@ def apply_fraksi_harga(price):
         return np.ceil(price / 25) * 25
     return price
 
-def smma(series, length):
-    """Smoothed Moving Average (setara dengan RMA/Wilder di TradingView)"""
-    return series.ewm(alpha=1/length, adjust=False).mean()
+def smma(src, length):
+    """
+    Menghitung Smoothed Moving Average (SMMA) yang persis IDENTIK dengan TradingView.
+    TradingView (ta.rma / ta.smma) menggunakan SMA sebagai titik awal (seed) perhitungan,
+    bukan nilai bar pertama seperti halnya EWM bawaan Pandas.
+    """
+    out = pd.Series(index=src.index, dtype=float)
+    sma = src.rolling(window=length).mean()
+    first_valid = sma.first_valid_index()
+    
+    if first_valid is None:
+        return out
+        
+    out.loc[first_valid] = sma.loc[first_valid]
+    start_idx = src.index.get_loc(first_valid) + 1
+    
+    for i in range(start_idx, len(src)):
+        out.iloc[i] = (out.iloc[i-1] * (length - 1) + src.iloc[i]) / length
+        
+    return out
 
 # --- Main Screener Function ---
 def run_alligator_screener(df, ticker_item, target_date=None):
@@ -40,7 +57,6 @@ def run_alligator_screener(df, ticker_item, target_date=None):
     if df is None:
         if ticker_item is None:
             return None
-        # Butuh data sekitar 1 tahun agar perhitungan SMMA 13 dan offset 8 stabil
         df = yf.download(ticker_item, period="1y", interval="1d", auto_adjust=False, progress=False)
 
     if df.empty:
@@ -62,24 +78,21 @@ def run_alligator_screener(df, ticker_item, target_date=None):
     if len(df_copy) < 30:
         return None
 
-    # Hitung Median Price
+    # Hitung Median Price (HL2)
     df_copy['Median'] = (df_copy['High'] + df_copy['Low']) / 2.0
     
-    # Hitung SMMA tanpa offset
+    # Hitung SMMA dasar tanpa offset
     base_jaw = smma(df_copy['Median'], 13)
     base_teeth = smma(df_copy['Median'], 8)
     base_lips = smma(df_copy['Median'], 5)
     
     # Terapkan Offset (digeser ke depan). 
-    # shift(8) berarti nilai hari ini dipindahkan ke 8 bar ke depan, 
-    # sehingga nilai bar terbaru yang valid ada di posisi setelah digeser.
-    # Untungnya shift(8) di pandas mengambil nilai dari 8 bar yang lalu dan menaruhnya di bar hari ini.
-    # Sehingga df['Jaw'].iloc[-1] akan berisi SMMA dari 8 bar yang lalu (tanpa NaN).
+    # Jika offset=8, nilai yang dibaca di bar terbaru hari ini adalah SMMA dari 8 bar yang lalu.
+    # Hal ini mereplikasi garis Alligator di chart TradingView.
     df_copy['Jaw'] = base_jaw.shift(8)
     df_copy['Teeth'] = base_teeth.shift(5)
     df_copy['Lips'] = base_lips.shift(3)
     
-    # Drop NaN agar tidak error saat mengambil bar terakhir
     df_copy = df_copy.dropna(subset=['Jaw', 'Teeth', 'Lips'])
     
     if len(df_copy) < 1:
@@ -103,9 +116,9 @@ def run_alligator_screener(df, ticker_item, target_date=None):
         'Date': latest.name.strftime('%d/%m/%Y'),
         'Tickers': ticker_item.replace('.JK', ''),
         'Price': f"{apply_fraksi_harga(current_price):,.0f}",
-        'Jaw': f"{apply_fraksi_harga(jaw_val):,.0f}",
-        'Teeth': f"{apply_fraksi_harga(teeth_val):,.0f}",
-        'Lips': f"{apply_fraksi_harga(lips_val):,.0f}",
+        'Jaw': f"{jaw_val:,.3f}",      # Tampilkan 3 angka desimal agar presisi
+        'Teeth': f"{teeth_val:,.3f}",
+        'Lips': f"{lips_val:,.3f}",
         '1D Return': f"{pct_change_vs_pc:+.2f}%"
     }
 
