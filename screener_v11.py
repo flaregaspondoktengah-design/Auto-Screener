@@ -380,14 +380,14 @@ def run_magic_screener(df, ticker_item, target_date=None):
             'Date': latest.name.strftime('%d/%m/%Y'),
             'Tickers': ticker_item.replace('.JK', ''),
             'Price': f"{latest_close:,.0f}",
-            '1D Return': f"{((latest_close - previous_close) / previous_close) * 100:.2f}%", # Poin 1: Ganti nama kolom
             'Trades': f"{backtest_metrics['total_trades']:.0f}",
             'WR': f"{backtest_metrics['win_rate']:.2f}%",
+            '1D Return': f"{((latest_close - previous_close) / previous_close) * 100:.2f}%",
             'Position': f"{intraday['position']:.2f}%",
             'Correlation': correlation_str,
             'Inflow Ratio': f"{inflow_ratio:.2f}x",
             'Daily Vol Ratio': f"{intraday['volume_ratio']:.2f}x",
-            'Vol Ratio': f"{vol_ratio:.2f}x" # Poin 3: Tambah kolom Vol Ratio
+            'Vol Ratio': f"{vol_ratio:.2f}x"
         }
     return None
 
